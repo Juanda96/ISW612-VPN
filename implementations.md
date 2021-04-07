@@ -1,20 +1,31 @@
-# Proyecto #2 - Creación de servicio VPN, Servidor web(VHost) y servidor SQL
-Debido a la pandemia de Covid-19, la empresa “Los Patitos S.A” los ha contratado a usted ysu compañero,
-para implementar una solución de VPN para habilitar a sus colaboradores la opción   de   teletrabajo.
-Para   demostrar   su   solución   deberá   considerar   al   menos   los   seisdispositivos que se muestran
-en el siguiente diagrama.La empresa “Noire S.A.” requiere desplegar toda su infraestructura en la nube de Azure,
-para lo cual usted deberá aprovisionar y configurar una servidor de OpenVPN, que será elúnico que tendrá
+# Proyecto #2 - Creaciï¿½n de servicio VPN, Servidor web(VHost) y servidor SQL
+Debido a la pandemia de Covid-19, la empresa ï¿½Los Patitos S.Aï¿½ los ha contratado a usted ysu compaï¿½ero,
+para implementar una soluciï¿½n de VPN para habilitar a sus colaboradores la opciï¿½n   de   teletrabajo.
+Para   demostrar   su   soluciï¿½n   deberï¿½   considerar   al   menos   los   seisdispositivos que se muestran
+en el siguiente diagrama.La empresa ï¿½Noire S.A.ï¿½ requiere desplegar toda su infraestructura en la nube de Azure,
+para lo cual usted deberï¿½ aprovisionar y configurar una servidor de OpenVPN, que serï¿½ elï¿½nico que tendrï¿½
 un puerto expuesto a Internet (el puerto 1194, en TCP/UDP), en otras dossub-redes de Azure, 
-usted deberá desplegar una servidor web con Apache2 y un servidor deMySQL.
+usted deberï¿½ desplegar una servidor web con Apache2 y un servidor deMySQL.
 
-Los trabajadores podrán acceder a dichos recursos desde clientes en Windows, GNU/Linux y Android,
-el nivel de acceso dependerá del rol del trabajador.
+Los trabajadores podrï¿½n acceder a dichos recursos desde clientes en Windows, GNU/Linux y Android,
+el nivel de acceso dependerï¿½ del rol del trabajador.
 
-El personal de tecnologías podráacceder tanto al servidor web, como al servidor de base de datos,
-mientras que el resto elpersonal solo podrá acceder al servidor de Apache2, para consumir los sitios
-que estánpublicados en dicho servido
+El personal de tecnologï¿½as podrï¿½acceder tanto al servidor web, como al servidor de base de datos,
+mientras que el resto elpersonal solo podrï¿½ acceder al servidor de Apache2, para consumir los sitios
+que estï¿½npublicados en dicho servido
 
-## Parte #1: Instalación de paquetes y servicios.
+# Contenido:
+
+1. [ConfiguraciÃ³n de OpenVPN](#item1)
+2. [ProgramaciÃ³n de script para creaciÃ³n de usuarios nuevos](#item2)
+3. [ConfiguraciÃ³n de servicios de Firewall](#item3)
+4. [ConfiguraciÃ³n de Vhost Apache 2 y servicio DNS](#item4)
+5. [ConfiguraciÃ³n de Base de Datos en MySQL](#item5)
+
+<a name="item1"></a>
+# ConfiguraciÃ³n de OpenVPN
+
+## Parte #1: InstalaciÃ³n de paquetes y servicios.
 Todas las siguientes librerias son necesarias para la utilizar satisfactoriamente el servicio de VPN
 ```bash
 apt-get install openvpn openssl ca-certificates iptables
@@ -24,7 +35,7 @@ tar xz EasyRSA-3.0.8.tgz /etc/openvpn/server/easy-rsa/
 
 ```
 
-## Parte #2: Creación de pki y configuración de CA (Autoridad certificadora)
+## Parte #2: CreaciÃ³n de pki y configuraciÃ³n de CA (Autoridad certificadora)
 Primero nos drigimos a la carpeta del servidor e ingresamos a easy-rsa
 ```bash
 cd /etc/openvpn/server/easy-rsa/
@@ -33,14 +44,39 @@ cd /etc/openvpn/server/easy-rsa/
 cp pki/ca.crt /etc/openvpn/server
 cp pki/private/ca.key /etc/openvpn/server
 ```
-Con estos comandos anteriores se creará el certificado y la llave de la CA, luego lo moveremos en la 
+Con estos comandos anteriores se crearÃ¡ el certificado y la llave de la CA, luego lo moveremos en la 
 raiz del servidor.
 
-## Parte #3 Creación de certificado y llave del servidor: 
+## Parte #3 CreaciÃ³n de certificado y llave del servidor: 
 Luego de crear la CA crearemos el certificado y la llave para el servidor
 ```bash
 ./easyrsa build-server-full server nopass
 cp pki/issued/server.crt /etc/openvpn/server
 cp pki/private/server.key /etc/openvpn/server
 ```
+<a name="item2"></a>
+# ProgramaciÃ³n de script para creaciÃ³n de usuarios nuevos
+El siguiente script fue realizado con el fin de ejecutar comandos por medio de una bash scripting y 
+lograr crear nuevos usuarios para el sistema, todo esto con el fin de facilitar las labores administrativas
 
+Script:
+```bash
+	echo "Provide a name for the client:"
+	read -p "Name: " client
+	cd /etc/openvpn/server/easy-rsa/
+	EASYRSA_CERT_EXPIRE=3650 ./easyrsa build-client-full "$client" nopass
+	echo "$client added. Configuration available in:" ~/"$client.ovpn"
+```
+<a name="item3"></a>
+# ConfiguraciÃ³n de servicios de Firewall
+En este proyecto el acceso a los servidores es sumamente restringido, de forma que solo los administradores
+de la red pueden ingresar a los mismos, en este caso por medio de el firewall iptables habilitaremos la conexiÃ³n
+a solo 1 dispositivo para ingresar y el resto de la red de cliente serÃ¡ bloqueada.
+
+![Firewall](./imgs/FirewallConfig.PNG)
+
+<a name="item4"></a>
+# ConfiguraciÃ³n de Vhost Apache 2 y servicio DNS
+
+<a name="item5"></a>
+# ConfiguraciÃ³n de Base de Datos en MySQL
