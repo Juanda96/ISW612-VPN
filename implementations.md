@@ -78,5 +78,31 @@ a solo 1 dispositivo para ingresar y el resto de la red de cliente será bloquea
 <a name="item4"></a>
 # Configuración de Vhost Apache 2 y servicio DNS
 
+## Instalar los paquetes de apache2 y el Servicio de DNS
+Para elaborar está sección necesitamos instalar los siguientes servicios por medio de los comando:
+```bash
+sudo apt-get update
+sudo apt-get install apache2 bind9
+```
+
+## Crear los directorios de las 2 páginas web 
+Cada una de las páginas deberá tener su propio directorio que contendra todo su codigo web
+```bash
+sudo mkdir -p /var/www/html/noire.isw612.xyz.co.cr
+sudo mkdir -p /var/www/html/noire.isw612.xyz.com
+```
+
+## Crear la configuración de los Vhost
+En este paso copiamos el archivo por defecto y creamos una copia para cada una de nuestras vhost
+```bash
+sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/noire.isw612.xyz.com.conf
+sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/noire.isw612.xyz.co.cr.conf
+```
+
+## Configuración de los sitios
+Se configura los archivos anteriormente generados para que queden de la siguiente forma
+![noire1](imgs\Noire1.conf.PNG)
+![noire2](imgs\Noire2.conf.PNG)
+
 <a name="item5"></a>
 # Configuración de Base de Datos en MySQL
