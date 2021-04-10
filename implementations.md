@@ -259,4 +259,9 @@ systemctl status bind9
 ```
 
 <a name="item7"></a>
-# Configuración de Base de Datos en MySQL
+# Configuración de  la Base de Datos en MySQL
+
+## Parte #1: Instalacion de la paqueteria
+```bash
+apt-get install mysql-server
+```
