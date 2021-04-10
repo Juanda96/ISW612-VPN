@@ -20,8 +20,9 @@ que est�npublicados en dicho servido
 2. [Configuración de OpenVPN](#item2)
 3. [Programación de script para creación de usuarios nuevos](#item3)
 4. [Configuración de servicios de Firewall](#item4)
-5. [Configuración de Vhost Apache 2 y servicio DNS](#item5)
-6. [Configuración de Base de Datos en MySQL](#item6)
+5. [Configuración de Vhost Apache 2](#item5)
+6. [Configuración del servicio Domain Name Server](#item6)
+6. [Configuración de Base de Datos en MySQL](#item7)
 
 <a name="item1"></a>
 # Configuración de Autoridad certificadora, del servidor y primer cliente
@@ -99,10 +100,15 @@ openvpn --genkey --secret /etc/openvpn/server/tc.key
 
 <a name="item2"></a>
 # Configuración de OpenVPN
+
+## Parte 1: Configuración del servidor
 Se configura el archivo server.conf de openvpn, lo mejor utilizar los archivos de configuración de muestra 
 de OpenVPN como punto de partida para su propia configuración.
-![Firewall](./imgs/OV.server.conf.PNG)
+![ServerConfig](./imgs/OV.server.conf.PNG)
 
+## Parte 2: Configuración del cliente
+Al igual que el archivo anterior buscamos el archivo client.conf y configuramos de la siguiente manera
+![ClienteConfig](./imgs/OV.client.conf.PNG)
 
 <a name="item3"></a>
 # Programación de script para creación de usuarios nuevos
@@ -155,31 +161,102 @@ a solo 1 dispositivo para ingresar y el resto de la red de cliente será bloquea
 <a name="item5"></a>
 # Configuración de Vhost Apache 2 y servicio DNS
 
-## Instalar los paquetes de apache2 y el Servicio de DNS
+## Parte #1: Instalar los paquetes de apache2 y el Servicio de DNS
 Para elaborar está sección necesitamos instalar los siguientes servicios por medio de los comando:
 ```bash
 sudo apt-get update
 sudo apt-get install apache2 bind9
 ```
 
-## Crear los directorios de las 2 páginas web 
+## Parte #2: Crear los directorios de las 2 páginas web 
 Cada una de las páginas deberá tener su propio directorio que contendra todo su codigo web
 ```bash
 sudo mkdir -p /var/www/html/noire.isw612.xyz.co.cr
 sudo mkdir -p /var/www/html/noire.isw612.xyz.com
 ```
 
-## Crear la configuración de los Vhost
+## Parte #3: Crear la configuración de los Vhost
 En este paso copiamos el archivo por defecto y creamos una copia para cada una de nuestras vhost
 ```bash
-sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/noire.isw612.xyz.com.conf
-sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/noire.isw612.xyz.co.cr.conf
+sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/noire1.isw612.xyz
+sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/noire2.isw612.xyz
 ```
 
-## Configuración de los sitios
+## Parte 4: Configuración de los sitios
 Se configura los archivos anteriormente generados para que queden de la siguiente forma
 ![noire1](imgs\Noire1.conf.PNG)
 ![noire2](imgs\Noire2.conf.PNG)
 
+## Parte 5: Creación de los archivos html que presentará la pagina
+Con los siguientes comando crearemos los directorios de las 2 páginas web e ingresamos el siguiente codigo en los archivos .html
+```bash
+mkdir /var/www/noire1.isw612.xyz/public_html/
+cd /var/www/noire1.isw612.xyz/public_html/
+nano index.html
+![noire1](imgs\Noire1html.PNG)
+```
+
+```bash
+mkdir /var/www/noire2.isw612.xyz/public_html/
+cd /var/www/noire1.isw612.xyz/public_html/
+nano index.html
+![noire1](imgs\Noire1html.PNG)
+```
+
+## Parte #6: Habilitar las paginas web
+Con el siguiente comando se habilitaran las paginas web para los que deseen acceder a ellos
+```bash
+a2ensite noire1.isw612.xyz
+a2ensite noire2.isw612.xyz
+```
+
+## Parte #7 Reiniciar los servicios de apache2
+```bash
+systemctl restart apache2
+```
+
 <a name="item6"></a>
+# Configuración del servicio Domain Name Server
+
+## Parte #1: Instalación de paquetería
+apt-get install bind9
+
+## Parte #2: Cofiguración del archivo named.conf.local
+Acá definiremos las zonas directas e inversas para acceder a nuestras páginas web
+```bash
+nano /etc/bind/named.conf.local
+![local ns](imgs\named.conf.local.PNG)
+```
+## Parte #3: Configuración de zonas directas
+Acá configuramos para que el servicio traduzca una cadena de nombre a una dirección ip especifica donde se
+encuentra el equipo o servicio
+```bash
+nano /etc/bind/db.noire1.isw612.xyz
+![noire1 ns](imgs\ns.noire1.PNG)
+```
+
+```bash
+nano /etc/bind/db.noire2.isw612.xyz
+![noire1 ns](imgs\ns.noire2.PNG)
+```
+
+## Parte #4: Configuración de zonas inversas
+lo que harán estas zonas es tomar una dirección ip y traducirla a una cadena de nombres.
+```bash
+nano /etc/bind/db.4.0.10noire1.in-addr.arpa
+![noire1 ns](imgs\ns.noire2i.PNG)
+```
+
+```bash
+nano /etc/bind/db.4.0.10noire2.in-addr.arpa
+![noire1 ns](imgs\ns.noire1i.PNG)
+```
+
+## Parte #5 Reiniciar los servicios de bind9 y comprobar el estado
+```bash
+systemctl restart bind9
+systemctl status bind9
+```
+
+<a name="item7"></a>
 # Configuración de Base de Datos en MySQL
