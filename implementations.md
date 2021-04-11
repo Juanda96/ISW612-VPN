@@ -31,7 +31,6 @@ que est�npublicados en dicho servido
 Todas las siguientes librerias son necesarias para la utilizar satisfactoriamente el servicio de VPN
 ```bash
 apt-get install openvpn openssl ca-certificates iptables
-
 mkdir -p /etc/openvpn/server/easy-rsa/
 wget  https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.8/EasyRSA-3.0.8.tgz
 chown -R root:root /etc/openvpn/server/easy-rsa/
@@ -152,6 +151,14 @@ Script:
 ```
 <a name="item4"></a>
 # Configuración de servicios de Firewall
+Configurar el servidor para que acepte paquetes por el puerto 1194 (OpenVPN)
+```bash
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -P OUTPUT ACCEPT
+iptables -A INPUT -p udp -m udp --dport 1194 -j ACCEPT
+iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+```
 En este proyecto el acceso a los servidores es sumamente restringido, de forma que solo los administradores
 de la red pueden ingresar a los mismos, en este caso por medio de el firewall iptables habilitaremos la conexión
 a solo 1 dispositivo para ingresar y el resto de la red de cliente será bloqueada.
@@ -262,6 +269,26 @@ systemctl status bind9
 # Configuración de  la Base de Datos en MySQL
 
 ## Parte #1: Instalacion de la paqueteria
+Este comando instalará todos los archivos necesarios para la administración de base de datos en MySQL
 ```bash
 apt-get install mysql-server
+```
+
+## Parte #2: ingresar a mysql como root
+Ingresamos a la base de datos como el usuario root para crear el nuevo usuario
+```mysql
+mysql -u root -p
+```
+
+## Parte #3: Creacion de nuevo usuario y darle permisos para tener privilegios
+```mysql
+CREATE USER 'Juan' IDENTIFIED BY 'secret123';
+GRANT ALL PRIVILEGES ON *.* TO 'Juan';
+```
+
+## Parte #4: Crear bases de datos Sakila, Northwind y World
+```mysql
+CREATE DATABASES Sakila 
+CREATE DATABASES Northwind
+CREATE DATABASES World
 ```
