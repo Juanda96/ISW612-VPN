@@ -1,17 +1,17 @@
 # Proyecto #2 - Creaci�n de servicio VPN, Servidor web(VHost) y servidor SQL
-Debido a la pandemia de Covid-19, la empresa �Los Patitos S.A� los ha contratado a usted ysu compa�ero,
-para implementar una soluci�n de VPN para habilitar a sus colaboradores la opci�n   de   teletrabajo.
-Para   demostrar   su   soluci�n   deber�   considerar   al   menos   los   seisdispositivos que se muestran
-en el siguiente diagrama.La empresa �Noire S.A.� requiere desplegar toda su infraestructura en la nube de Azure,
-para lo cual usted deber� aprovisionar y configurar una servidor de OpenVPN, que ser� el�nico que tendr�
+Debido a la pandemia de Covid-19, la empresa Noire S.A. los ha contratado a usted ysu compañero,
+para implementar una solución de VPN para habilitar a sus colaboradores la opción   de   teletrabajo.
+Para   demostrar   su   solución   deberá  considerar   al   menos   los   seisdispositivos que se muestran
+en el siguiente diagrama.La empresa Noire S.A. requiere desplegar toda su infraestructura en la nube de Azure,
+para lo cual usted deberá aprovisionar y configurar una servidor de OpenVPN, que será el único que tendrá
 un puerto expuesto a Internet (el puerto 1194, en TCP/UDP), en otras dossub-redes de Azure, 
-usted deber� desplegar una servidor web con Apache2 y un servidor deMySQL.
+usted deberá desplegar una servidor web con Apache2 y un servidor deMySQL.
 
-Los trabajadores podr�n acceder a dichos recursos desde clientes en Windows, GNU/Linux y Android,
-el nivel de acceso depender� del rol del trabajador.
+Los trabajadores podrán acceder a dichos recursos desde clientes en Windows, GNU/Linux y Android,
+el nivel de acceso dependerá del rol del trabajador.
 
-El personal de tecnolog�as podr�acceder tanto al servidor web, como al servidor de base de datos,
-mientras que el resto elpersonal solo podr� acceder al servidor de Apache2, para consumir los sitios
+El personal de tecnologías podrá acceder tanto al servidor web, como al servidor de base de datos,
+mientras que el resto elpersonal solo podrá acceder al servidor de Apache2, para consumir los sitios
 que est�npublicados en dicho servido
 
 # Contenido:
