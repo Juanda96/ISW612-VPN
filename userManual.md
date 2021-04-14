@@ -88,7 +88,6 @@ ping -c 4 10.0.4.7
 # Configurar VPN en dispositivo Android
 
 ## Paso #1: Descargue el archivo con extensi�n .ovpn
- ## Paso #1: Descargue el archivo con extensi�n .ovpn
 Este archivo deber� colocarlo en una carpeta segura que ningun otro usuario tenga acceso a la misma, recuerde que debe tener cuidado con 
 este archivo ya que facilita la conexi�n hacia la red empresarial.
 

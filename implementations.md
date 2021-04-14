@@ -37,12 +37,17 @@ chown -R root:root /etc/openvpn/server/easy-rsa/
 tar xz EasyRSA-3.0.8.tgz /etc/openvpn/server/easy-rsa/
 ```
 
+el permiso root:root será para que el usuario root o el grupo root pueda tener acceso a esa carpeta.
+
 ## Parte #2: Iniciar entorno de EasyRSA PKI y configuración de CA (Autoridad certificadora)
 Primero nos drigimos a la carpeta del servidor e ingresamos los siguientes comandos
 ```bash
 cd /etc/openvpn/server/easy-rsa/
 ./easyrsa init-pki
 ```
+Easy-rsa es una utilidad para crear y administrar Autoridades certificadoras, en terminos
+sencillos esto significa que puede crear y administrar CA Raiz, CA intermedias, clientes finales
+solicitar y firmar certificados e incluso las listas de revocación de certificados CRL
 
 ## Parte #3: Creación de Deffie Hellman
 En este punto crearemos la clave o módulos Diffie-Hellman utilizados por OpenVPN al establecer el primer contacto entre los nodos de la VPN.
@@ -53,7 +58,7 @@ En este punto crearemos la clave o módulos Diffie-Hellman utilizados por OpenVP
 el .crt Es la clave pública de la autoridad certificante encapsulada en un formato de certificado digital x509 que tanto cliente como servidor 
 OpenVPN utilizarán para identificarse entre si con confianza mutua
 
-la .key es la clave privada RSA de la autoridad certificante, y es con la que se firman las claves y certificados tanto del servidor como de los clientes.
+la .key es la clave privada RSA de la autoridad certificante, y es con la que se firman las claves y certificados del servidor.
 ```bash
 ./easyrsa --batch build-ca nopass
 ```
@@ -67,15 +72,15 @@ cp pki/private/ca.key /etc/openvpn/server
 ## Parte #6 Creación de certificado y llave del servidor: 
 Luego de crear la CA crearemos el certificado y la llave para el servidor
 ```bash
-./easyrsa build-server-full server nopass
+EASYRSA_CERT_EXPIRE=3650 ./easyrsa build-server-full server nopass
 cp pki/issued/server.crt /etc/openvpn/server
 cp pki/private/server.key /etc/openvpn/server
 ```
 
 ## Parte 7: Creación de certificado y llave para el cliente
-Con el siguiente comando crearemos la key y el crt del cliente.
+Con el siguiente comando crearemos la key y el crt del primer cliente cliente.
 ```bash
-./easyrsa build-client-full "$client" nopass
+EASYRSA_CERT_EXPIRE=3650  ./easyrsa build-client-full JuanDanielWindows nopass
 ```
 
 ## Parte 8: Generar CRL
@@ -105,9 +110,46 @@ Se configura el archivo server.conf de openvpn, lo mejor utilizar los archivos d
 de OpenVPN como punto de partida para su propia configuración.
 ![ServerConfig](./imgs/OV.server.conf.PNG)
 
+Acá especificamos:
+1. ip privada del servidor
+2. Puerto que utilizará el servidor, en este caso es el 1194 (puerto para OpenVPN)
+3. Protocolo de la capa de transporte
+4. Crea un tunel de enrutamiento
+5. Certificado de la Autoridad Certificadora
+6. Certificado del servidor
+7. Llave del servidor
+8. Archivo DH para intercambio de claves
+9. autenticación de tipo Sha512 (función hash criptografica)
+10. Llave del TLS
+11. La red que creará será de tipo subred
+12. El pool de ips para la subred con su debida mascara
+13. Esta directiva se habilita para redirigir a todos los clientes por el gateway predeterminado del servidor
+14. Los servidores DNS que utilizará el clente, deberán ser servidores de tipo publico
+16. Cifrado criptografico que utilizara en la capa de transporte
+17. No va tener ningun grupo o usuario especifico
+19. evita acceder a ciertos recursos al reiniciar que puede que ya no sea accesible porque
+   de la degradación de privilegios.
+21. Envia el nivel apropiado al log
+22. Lista de certificados revocados.
+23. Notifica a los clientes cuando el servidor se reinicia y tambien reconecta de forma automatica
+
 ## Parte 2: Configuración del cliente
 Al igual que el archivo anterior buscamos el archivo client.conf y configuramos de la siguiente manera
 ![ClienteConfig](./imgs/OV.client.conf.PNG)
+
+Se especifica
+1. El archivo será la configuración de los clientes.
+2. utilizara el mismo que el servidor, en este caso un tunel de enrutamiento
+3. La ip publica del servidor
+4. Resuelve de forma indefinida o infinita el nombre del servidor OV
+5. Los clientes no necesitan ligar un puerto especifico de comunicación
+6. Preserva los datos de key y tun despues de un reinicio
+8. Verifica los certificados del servidor para checar que la clave es correcta.
+9. autenticación de tipo Sha512
+10. Cifrado de la capa de transporte, debe ser igual al servidor
+11. Bloquea dns o servidores adaptados a otros puertos de red.
+12. No almacena llaves en la cache
+13. Envia el nivel apropiado de log
 
 <a name="item3"></a>
 # Programación de script para creación de usuarios nuevos
@@ -134,12 +176,12 @@ Script:
 	} > ~/"$client".ovpn
 }
 	echo
-	echo "Provide a name for the client:"
-	read -p "Name: " unsanitized_client
+	echo "Nombre del nuevo usuario y tipo de sistema operativo (ejemplo: (PedroWindows)):"
+	read -p "Nombre: " unsanitized_client
 	client=$(sed 's/[^0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-]/_/g' <<< "$unsanitized_client")
 	while [[ -z "$client" || -e /etc/openvpn/server/easy-rsa/pki/issued/"$client".crt ]]; do
-	echo "$client: invalid name."
-	read -p "Name: " unsanitized_client
+	echo "$client: Nombre no valido, intente de nuevo."
+	read -p "Nombre: " unsanitized_client
 	client=$(sed 's/[^0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-]/_/g' <<< "$unsanitized_client")
 	done
 	cd /etc/openvpn/server/easy-rsa/
@@ -165,6 +207,17 @@ a solo 1 dispositivo para ingresar y el resto de la red de cliente será bloquea
 
 ![Firewall](./imgs/FirewallConfig.PNG)
 
+1. Acepta todos los paquetes de entrada
+2. acepta todos los paquetes de salida al exterior de la red
+3. Acepta todos los paquetes generados dentro de la red
+4. Acepta todos los paquetes de entrada del protocolo de transporte UDP del puerto 1194
+5. Acepta todo el trafico de entrada a las conexiones establecidas
+6. Acepta todo el trafico de la ip 10.10.0.2 (Administrador de la red) hacia la ip 10.0.4.5 (Servidor web)
+7. Acepta todo el trafico de la ip 10.10.0.2 (Administrador de la red) hacia la ip 10.0.4.5 (Servidor DB)
+8. Deniega el acceso a cualquier dispositivo proveniente de la red 10.10.0.0/24 hacia el servidor web
+9. Deniega el acceso a cualquier dispositivo proveniente de la red 10.10.0.0/24 hacia el servidor DB
+10. Acepta todo el trafico proveniente de la red 10.10.0.0/24
+
 <a name="item5"></a>
 # Configuración de Vhost Apache 2 y servicio DNS
 
@@ -178,8 +231,8 @@ sudo apt-get install apache2 bind9
 ## Parte #2: Crear los directorios de las 2 páginas web 
 Cada una de las páginas deberá tener su propio directorio que contendra todo su codigo web
 ```bash
-sudo mkdir -p /var/www/html/noire.isw612.xyz.co.cr
-sudo mkdir -p /var/www/html/noire.isw612.xyz.com
+sudo mkdir -p /var/www/html/noire1.isw612.xyz
+sudo mkdir -p /var/www/html/noire2.isw612.xyz
 ```
 
 ## Parte #3: Crear la configuración de los Vhost
@@ -196,14 +249,14 @@ Se configura los archivos anteriormente generados para que queden de la siguient
 
 ## Parte 5: Creación de los archivos html que presentará la pagina
 Con los siguientes comando crearemos los directorios de las 2 páginas web e ingresamos el siguiente codigo en los archivos .html
-```bash
+```html
 mkdir /var/www/noire1.isw612.xyz/public_html/
 cd /var/www/noire1.isw612.xyz/public_html/
 nano index.html
 ![noire1](imgs\Noire1html.PNG)
 ```
 
-```bash
+```html
 mkdir /var/www/noire2.isw612.xyz/public_html/
 cd /var/www/noire1.isw612.xyz/public_html/
 nano index.html
